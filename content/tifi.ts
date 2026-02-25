@@ -88,7 +88,7 @@ export const tifiContent: TifiContent = {
   },
   about: {
     summary:
-      'TIFI is an international DJ and producer crafting timeless music for elevated spaces. Blending Melodic Afro House and Indie-Dance Soul, his sound lives somewhere between nostalgia and forward motion. His identity extends beyond music, defined by taste, atmosphere, and elevated experience. An upcoming EP featuring major collaborations signals the next chapter in his evolution: bold, intentional, and built to last as he takes his vision worldwide.',
+      'TIFI is an international DJ and producer crafting timeless music for elevated spaces. Blending Melodic Afro House and Indie-Dance Soul, his sound lives somewhere between nostalgia and forward motion. His identity extends beyond music, defined by taste, atmosphere, and elevated experience. An upcoming EP featuring major collaborations signals the next chapter in his evolution: bold, intentional, and built to last. Stay tuned as TIFI takes his vision worldwide.',
     descriptors: [
       'timeless',
       'melodic',
