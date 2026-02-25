@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { MagneticButton } from '@/components/MagneticButton'
@@ -32,28 +32,29 @@ export function Hero() {
   )
   const [currentVideo, setCurrentVideo] = useState(0)
   const [videoFailed, setVideoFailed] = useState(false)
-  const [nextReady, setNextReady] = useState(false)
-  const [pendingAdvance, setPendingAdvance] = useState(false)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const [activeSlot, setActiveSlot] = useState<0 | 1>(0)
+  const [slotVideoIndex, setSlotVideoIndex] = useState<[number, number]>([0, 1])
+  const [pendingNextIndex, setPendingNextIndex] = useState<number | null>(null)
+  const [preparingSlot, setPreparingSlot] = useState<0 | 1 | null>(null)
+  const videoRefs = useRef<[HTMLVideoElement | null, HTMLVideoElement | null]>([null, null])
   const coverStart = playlist[0].startAt ?? 0
   const coverDuration = 14
   const coverEnd = coverStart + coverDuration
-  const getNextIndex = (index: number) => {
+  const getNextIndex = useCallback((index: number) => {
     if (index === 0) return 1
     if (index < playlist.length - 1) return index + 1
     return 1
-  }
+  }, [playlist.length])
   const nextVideoIndex = getNextIndex(currentVideo)
 
   useEffect(() => {
     if (reduceMotion) return
-    const video = videoRef.current
+    const video = videoRefs.current[activeSlot]
     if (!video) return
 
     const isCover = currentVideo === 0
     const startAt = playlist[currentVideo]?.startAt ?? 0
     setVideoFailed(false)
-    setPendingAdvance(false)
 
     const seekToStart = () => {
       try {
@@ -77,16 +78,9 @@ export function Hero() {
       }
     }
 
-    const goToNextVideo = () => {
-      setCurrentVideo((prev) => {
-        if (prev < playlist.length - 1) return prev + 1
-        return 1
-      })
-    }
-
     const handleError = () => {
       setVideoFailed(true)
-      goToNextVideo()
+      setPendingNextIndex(getNextIndex(currentVideo))
     }
 
     if (video.readyState >= 1) {
@@ -95,37 +89,83 @@ export function Hero() {
       video.addEventListener('loadedmetadata', seekToStart)
     }
     video.addEventListener('timeupdate', keepCoverClipLoop)
-    video.addEventListener('ended', goToNextVideo)
     video.addEventListener('error', handleError)
 
     return () => {
       video.removeEventListener('loadedmetadata', seekToStart)
       video.removeEventListener('timeupdate', keepCoverClipLoop)
-      video.removeEventListener('ended', goToNextVideo)
       video.removeEventListener('error', handleError)
     }
-  }, [coverEnd, coverStart, currentVideo, playlist, reduceMotion])
+  }, [activeSlot, coverEnd, coverStart, currentVideo, getNextIndex, playlist, reduceMotion])
 
   useEffect(() => {
     if (reduceMotion || playlist.length < 2) return
+    if (pendingNextIndex !== null || preparingSlot !== null) return
 
     const delay = currentVideo === 0 ? coverDuration * 1000 : 7000
     const cycleTimer = window.setTimeout(() => {
-      if (nextReady) {
-        setCurrentVideo(nextVideoIndex)
-      } else {
-        setPendingAdvance(true)
-      }
+      setPendingNextIndex(nextVideoIndex)
     }, delay)
 
     return () => window.clearTimeout(cycleTimer)
-  }, [coverDuration, currentVideo, nextReady, nextVideoIndex, playlist.length, reduceMotion])
+  }, [coverDuration, currentVideo, nextVideoIndex, pendingNextIndex, playlist.length, preparingSlot, reduceMotion])
 
   useEffect(() => {
-    if (!pendingAdvance || !nextReady) return
-    setPendingAdvance(false)
-    setCurrentVideo(nextVideoIndex)
-  }, [nextReady, nextVideoIndex, pendingAdvance])
+    if (pendingNextIndex === null) return
+    const inactive = (1 - activeSlot) as 0 | 1
+    setSlotVideoIndex((prev) => {
+      const next: [number, number] = [...prev] as [number, number]
+      next[inactive] = pendingNextIndex
+      return next
+    })
+    setPreparingSlot(inactive)
+  }, [activeSlot, pendingNextIndex])
+
+  useEffect(() => {
+    if (preparingSlot === null || pendingNextIndex === null) return
+    const video = videoRefs.current[preparingSlot]
+    if (!video) return
+
+    const startAt = playlist[pendingNextIndex]?.startAt ?? 0
+    const isCover = pendingNextIndex === 0
+
+    const startPreparedVideo = () => {
+      try {
+        video.currentTime = isCover ? coverStart : startAt
+      } catch {
+        video.currentTime = 0
+      }
+      video
+        .play()
+        .then(() => {
+          setActiveSlot(preparingSlot)
+          setCurrentVideo(pendingNextIndex)
+          setPendingNextIndex(null)
+          setPreparingSlot(null)
+        })
+        .catch(() => {
+          setPendingNextIndex(getNextIndex(pendingNextIndex))
+          setPreparingSlot(null)
+        })
+    }
+
+    const handleError = () => {
+      setPendingNextIndex(getNextIndex(pendingNextIndex))
+      setPreparingSlot(null)
+    }
+
+    if (video.readyState >= 1) {
+      startPreparedVideo()
+    } else {
+      video.addEventListener('loadedmetadata', startPreparedVideo, { once: true })
+    }
+    video.addEventListener('error', handleError, { once: true })
+
+    return () => {
+      video.removeEventListener('loadedmetadata', startPreparedVideo)
+      video.removeEventListener('error', handleError)
+    }
+  }, [coverStart, getNextIndex, pendingNextIndex, playlist, preparingSlot])
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden" aria-labelledby="hero-title">
@@ -133,26 +173,30 @@ export function Hero() {
         {!reduceMotion && !videoFailed ? (
           <div className="absolute inset-0">
             <video
-              key={`${currentVideo}-${playlist[currentVideo]?.src}`}
-              ref={videoRef}
-              src={playlist[currentVideo]?.src}
+              ref={(el) => {
+                videoRefs.current[0] = el
+              }}
+              src={playlist[slotVideoIndex[0]]?.src}
               muted
               autoPlay
               playsInline
-              preload={currentVideo === 0 ? 'auto' : 'metadata'}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-                videoFailed ? 'opacity-0' : 'opacity-100'
+              preload="auto"
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                activeSlot === 0 && !videoFailed ? 'opacity-100' : 'opacity-0'
               }`}
             />
             <video
-              key={`preload-${nextVideoIndex}-${playlist[nextVideoIndex]?.src}`}
-              src={playlist[nextVideoIndex]?.src}
+              ref={(el) => {
+                videoRefs.current[1] = el
+              }}
+              src={playlist[slotVideoIndex[1]]?.src}
               muted
               preload="auto"
+              autoPlay
               playsInline
-              onLoadedData={() => setNextReady(true)}
-              className="hidden"
-              aria-hidden
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+                activeSlot === 1 && !videoFailed ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           </div>
         ) : (
