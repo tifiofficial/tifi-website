@@ -19,8 +19,8 @@ export function Hero() {
   const playlist = useMemo<HeroVideoItem[]>(
     () =>
       [
-        { src: '/videos/web/hero-01-ncg.mp4', label: 'New City Gas, Montreal', startAt: 110 },
-        { src: '/videos/web/hero-02-dprtmnt-1.mp4', label: 'Dprtmnt, Toronto', startAt: 74 },
+        { src: '/videos/web/hero-01-ncg.mp4', label: 'New City Gas, Montreal', startAt: 16 },
+        { src: '/videos/web/hero-02-dprtmnt-1.mp4', label: 'Dprtmnt, Toronto' },
         { src: '/videos/web/hero-03-dprtmnt-2.mp4', label: 'Dprtmnt, Toronto' },
         { src: '/videos/web/hero-04-soluna.mp4', label: 'Soluna, Toronto' },
         { src: '/videos/web/hero-05-beachclub-1.mp4', label: 'Beachclub, Montreal' },
