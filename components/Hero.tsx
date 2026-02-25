@@ -32,10 +32,18 @@ export function Hero() {
   )
   const [currentVideo, setCurrentVideo] = useState(0)
   const [videoFailed, setVideoFailed] = useState(false)
+  const [nextReady, setNextReady] = useState(false)
+  const [pendingAdvance, setPendingAdvance] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const coverStart = playlist[0].startAt ?? 0
   const coverDuration = 14
   const coverEnd = coverStart + coverDuration
+  const getNextIndex = (index: number) => {
+    if (index === 0) return 1
+    if (index < playlist.length - 1) return index + 1
+    return 1
+  }
+  const nextVideoIndex = getNextIndex(currentVideo)
 
   useEffect(() => {
     if (reduceMotion) return
@@ -45,6 +53,7 @@ export function Hero() {
     const isCover = currentVideo === 0
     const startAt = playlist[currentVideo]?.startAt ?? 0
     setVideoFailed(false)
+    setPendingAdvance(false)
 
     const seekToStart = () => {
       try {
@@ -102,15 +111,21 @@ export function Hero() {
 
     const delay = currentVideo === 0 ? coverDuration * 1000 : 7000
     const cycleTimer = window.setTimeout(() => {
-      setCurrentVideo((prev) => {
-        if (prev === 0) return 1
-        if (prev < playlist.length - 1) return prev + 1
-        return 1
-      })
+      if (nextReady) {
+        setCurrentVideo(nextVideoIndex)
+      } else {
+        setPendingAdvance(true)
+      }
     }, delay)
 
     return () => window.clearTimeout(cycleTimer)
-  }, [coverDuration, currentVideo, playlist.length, reduceMotion])
+  }, [coverDuration, currentVideo, nextReady, nextVideoIndex, playlist.length, reduceMotion])
+
+  useEffect(() => {
+    if (!pendingAdvance || !nextReady) return
+    setPendingAdvance(false)
+    setCurrentVideo(nextVideoIndex)
+  }, [nextReady, nextVideoIndex, pendingAdvance])
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden" aria-labelledby="hero-title">
@@ -128,6 +143,16 @@ export function Hero() {
               className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
                 videoFailed ? 'opacity-0' : 'opacity-100'
               }`}
+            />
+            <video
+              key={`preload-${nextVideoIndex}-${playlist[nextVideoIndex]?.src}`}
+              src={playlist[nextVideoIndex]?.src}
+              muted
+              preload="auto"
+              playsInline
+              onLoadedData={() => setNextReady(true)}
+              className="hidden"
+              aria-hidden
             />
           </div>
         ) : (
