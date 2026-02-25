@@ -244,7 +244,7 @@ export function Hero() {
             </motion.div>
           </motion.h1>
 
-          <div className="-mt-12 md:-mt-16">
+          <div className="-mt-8 md:-mt-10">
             <motion.div
               initial={{ scaleX: 0, opacity: 0 }}
               animate={{ scaleX: 1, opacity: 1 }}
