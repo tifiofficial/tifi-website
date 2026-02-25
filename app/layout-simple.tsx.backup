@@ -1,0 +1,22 @@
+// Backup of layout - testing simpler version
+import type { Metadata } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'TIFI | Producer / DJ',
+  description: 'TIFI is a diverse DJ/producer from Toronto.',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body style={{ margin: 0, padding: 0, backgroundColor: '#0a0e27', color: '#ffffff' }}>
+        {children}
+      </body>
+    </html>
+  )
+}

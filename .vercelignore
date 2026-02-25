@@ -1,0 +1,13 @@
+# Ignore heavy source media and keep only optimized web hero clips
+public/videos/*.MOV
+public/videos/*.mov
+public/videos/*.m4v
+public/videos/*.MP4
+public/videos/*.mp4
+!public/videos/web/**
+!public/videos/README.md
+
+# Standard local/build artifacts
+.next
+node_modules
+.DS_Store
