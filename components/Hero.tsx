@@ -216,15 +216,6 @@ export function Hero() {
 
       <div className="relative z-10 flex min-h-[100svh] items-center justify-center px-5 pt-24 md:px-10">
         <div className="mx-auto w-full max-w-5xl text-center">
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="eyebrow text-[11px] text-cream/80"
-          >
-            {tifiContent.brand.location}
-          </motion.p>
-
           <motion.h1 id="hero-title" className="mt-3" aria-label={tifiContent.brand.name}>
             <motion.div
               initial={{ y: 28, opacity: 0 }}
@@ -245,22 +236,6 @@ export function Hero() {
           </motion.h1>
 
           <div className="-mt-8 md:-mt-10">
-            <motion.div
-              initial={{ scaleX: 0, opacity: 0 }}
-              animate={{ scaleX: 1, opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto mt-1 h-px w-28 origin-center bg-cream/70 md:w-40"
-            />
-
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.18 }}
-              className="eyebrow mx-auto max-w-xl text-sm text-cream/85 md:text-base"
-            >
-              {tifiContent.brand.tagline}
-            </motion.p>
-
             <motion.p
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
