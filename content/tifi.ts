@@ -102,13 +102,13 @@ export const tifiContent: TifiContent = {
     asOf: 'As of 2026',
     items: [
       { label: 'SoundCloud Streams', value: 700_000 },
-      { label: 'Instagram Followers', value: 3_000 },
+      { label: 'Instagram Followers', value: 3_800 },
       { label: 'TikTok Views', value: 3_000_000 },
     ],
     label: 'As of 2026',
     spotifyStreams: 0,
     soundcloudStreams: 700_000,
-    instagramFollowers: 3_000,
+    instagramFollowers: 3_800,
     tiktokViews: 3_000_000,
   },
   venues: [

@@ -11,15 +11,16 @@ function Counter({ value }: { value: number }) {
   const inView = useInView(ref, { once: true, margin: '-100px' })
 
   useEffect(() => {
-    if (inView) mv.set(value)
-  }, [inView, mv, value])
-
-  useEffect(() => {
+    if (ref.current) ref.current.textContent = Math.floor(sv.get()).toLocaleString()
     const unsub = sv.on('change', (latest) => {
       if (ref.current) ref.current.textContent = Math.floor(latest).toLocaleString()
     })
     return unsub
   }, [sv])
+
+  useEffect(() => {
+    if (inView) mv.set(value)
+  }, [inView, mv, value])
 
   return <span ref={ref}>0</span>
 }
@@ -45,7 +46,7 @@ export function Stats() {
               transition={{ duration: 0.45, delay: i * 0.08 }}
               className="rounded-sm border border-ice/20 bg-ink/40 p-4"
             >
-              <p className="font-display text-4xl md:text-5xl">
+              <p className="font-display text-3xl leading-none sm:text-4xl md:text-5xl">
                 <Counter value={stat.value} />
                 {stat.suffix ?? ''}
               </p>
